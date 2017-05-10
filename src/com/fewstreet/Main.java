@@ -10,15 +10,16 @@ public class Main {
     public static void main(String[] args) {
         MediaFileMapper m = new MediaFileMapper();
         try {
-            Connection c = DriverManager.getConnection("jdbc:hsqldb:file:/tmp/db/subsonic", "SA", "");
-            //c.createStatement().execute("CREATE TABLE MEDIA_FILE (name varchar(45))");
-            //c.createStatement().execute("INSERT INTO MEDIA_FILE VALUES ('peter')");
-            ResultSet r = c.createStatement().executeQuery("SELECT * from MEDIA_FILE LIMIT 50");
-            while(r.next()){
+            Connection hsqldbc = DriverManager.getConnection("jdbc:hsqldb:file:/tmp/db/subsonic", "SA", "");
+            //Connection mysqlc = DriverManager.getConnection("jdbc:mysql://localhost/subsonic", "subsonic", "");
+            ResultSet r = hsqldbc.createStatement().executeQuery("SELECT * from MEDIA_FILE ORDER BY id ASC LIMIT 2000");
+            int i = 0;
+            while(r.next() && i < 700){
                 MediaFile mf = m.mapRow(r);
                 System.out.println(mf.id +" "+mf.artist);
+                i++;
             }
-            c.close();
+            hsqldbc.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
