@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
         MediaFileMapper m = new MediaFileMapper();
         try {
-            Connection hsqldbc = DriverManager.getConnection("jdbc:hsqldb:file:/tmp/db/subsonic", "SA", "");
+            Connection hsqldbc = DriverManager.getConnection("jdbc:hsqldb:file:C:\\Users\\Peter\\Downloads\\db\\subsonic", "SA", "");
             //Connection mysqlc = DriverManager.getConnection("jdbc:mysql://localhost/subsonic", "subsonic", "");
             ResultSet r = hsqldbc.createStatement().executeQuery("SELECT * from MEDIA_FILE ORDER BY id ASC LIMIT 2000");
             int i = 0;
