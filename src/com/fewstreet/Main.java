@@ -7,35 +7,50 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            Connection hsqldbc = DriverManager.getConnection("jdbc:hsqldb:file:C:\\Users\\Peter\\Downloads\\db\\subsonic", "SA", "");
-            Connection mysqlc = DriverManager.getConnection("jdbc:mysql://192.168.1.221/subsonic_migrate?useJDBCCompliantTimezoneShift=true&serverTimezone=UTC&useSSL=false", "subsonic", "xjXtvllUcRN664pP");
-            mysqlc.setAutoCommit(false);
+            Connection old_db_connection = DriverManager.getConnection("jdbc:hsqldb:file:C:\\Users\\Peter\\Downloads\\db\\subsonic", "SA", "");
+            Connection new_db_connection = DriverManager.getConnection("jdbc:mysql://192.168.1.221/subsonic_migrate?useJDBCCompliantTimezoneShift=true&serverTimezone=UTC&useSSL=false&allowMultiQueries=true", "subsonic", "xjXtvllUcRN664pP");
+            new_db_connection.setAutoCommit(false);
 
-            try { migrateVersion(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Versions Failed");}
-            try { migrateRoles(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Roles Failed");}
-            try { migrateUsers(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Users Failed");}
-            try { migrateUserRole(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("User roles Failed");}
-            try { migrateMediaFiles(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Media files Failed");}
-            try { migrateAlbums(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Albums Failed");}
-            try { migrateArtists(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Artists roles Failed");}
-            try { migrateMusicFolders(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Music Folders Failed");}
-            try { migrateMusicFolderUsers(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Music Folder Users Failed");}
+            truncateDatShit(new_db_connection);
 
-            mysqlc.commit();
-            mysqlc.close();
-            hsqldbc.close();
+            try { migrateVersion(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Versions Failed: " + e);}
+            try { migrateTableID(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Table IDs Failed: " + e);}
+            try { migrateRoles(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Roles Failed: " + e);}
+            try { migrateUsers(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Users Failed: " + e);}
+            try { migrateUserRole(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("User roles Failed: " + e);}
+            try { migrateMediaFiles(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Media files Failed: " + e);}
+            try { migrateAlbums(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Albums Failed: " + e);}
+            try { migrateArtists(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Artists roles Failed: " + e);}
+            try { migrateMusicFolders(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Music Folders Failed: " + e);}
+            try { migrateMusicFolderUsers(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Music Folder Users Failed: " + e);}
+            try { migrateStarredMediaFile(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Starred media file Failed: " + e);}
+
+            new_db_connection.commit();
+            new_db_connection.close();
+            old_db_connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     private static void migrateVersion(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT version from VERSION");
+        String TABLE_NAME = "VERSION";
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT version from "+TABLE_NAME);
         while(r.next()){
-            insert(new_db_conn, "insert into VERSION ( version ) values (?)",
+            insert(new_db_conn, "insert into "+TABLE_NAME+" ( version ) values (?)",
                     r.getInt(1));
         }
         System.out.println("Inserted all versions");
+    }
+
+    private static void migrateTableID(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        String TABLE_NAME = "TABLE_ID";
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT table_name,max_id from "+TABLE_NAME);
+        while(r.next()){
+            insert(new_db_conn, "insert into "+TABLE_NAME+" ( table_name,max_id ) values (?,?)",
+                    r.getString(1), r.getInt(2));
+        }
+        System.out.println("Inserted all table ids");
     }
 
     private static void migrateRoles(Connection old_db_conn, Connection new_db_conn) throws SQLException {
@@ -127,6 +142,18 @@ public class Main {
         System.out.println("Inserted all media files");
     }
 
+    private static void migrateStarredMediaFile(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        String TABLE_NAME = "STARRED_MEDIA_FILE";
+        String columns = "id, media_file_id, username, created";
+
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
+        while(r.next()){
+            insert(new_db_conn, "insert into "+TABLE_NAME+" ( "+columns+" ) values ("+questionMarks(columns)+")",
+                    r.getInt(1), r.getInt(2), r.getString(3), r.getTimestamp(4));
+        }
+        System.out.println("Inserted all starred media files");
+    }
+
     private static String questionMarks(String columns) {
         int count = columns.split(", ").length;
         StringBuilder builder = new StringBuilder();
@@ -146,6 +173,48 @@ public class Main {
         }
         int result = stmt.executeUpdate();
         stmt.close();
+        return result;
+    }
+    
+    private static boolean truncateDatShit(Connection newconn) throws SQLException {
+        String query = "SET FOREIGN_KEY_CHECKS=0; " +
+                "TRUNCATE TABLE album; " +
+                "TRUNCATE TABLE artist; " +
+                "TRUNCATE TABLE bookmark; " +
+                "TRUNCATE TABLE custom_avatar; " +
+                "TRUNCATE TABLE genre; " +
+                "TRUNCATE TABLE internet_radio; " +
+                "TRUNCATE TABLE media_file; " +
+                "TRUNCATE TABLE music_file_info; " +
+                "TRUNCATE TABLE music_folder; " +
+                "TRUNCATE TABLE music_folder_user; " +
+                "TRUNCATE TABLE play_queue; " +
+                "TRUNCATE TABLE play_queue_file; " +
+                "TRUNCATE TABLE player; " +
+                "TRUNCATE TABLE player_transcoding2; " +
+                "TRUNCATE TABLE playlist; " +
+                "TRUNCATE TABLE playlist_file; " +
+                "TRUNCATE TABLE playlist_user; " +
+                "TRUNCATE TABLE podcast_channel; " +
+                "TRUNCATE TABLE podcast_episode; " +
+                "TRUNCATE TABLE role; " +
+                "TRUNCATE TABLE share; " +
+                "TRUNCATE TABLE share_file; " +
+                "TRUNCATE TABLE starred_album; " +
+                "TRUNCATE TABLE starred_artist; " +
+                "TRUNCATE TABLE starred_media_file; " +
+                "TRUNCATE TABLE system_avatar; " +
+                "TRUNCATE TABLE table_id; " +
+                "TRUNCATE TABLE transcoding2; " +
+                "TRUNCATE TABLE user; " +
+                "TRUNCATE TABLE user_rating; " +
+                "TRUNCATE TABLE user_role; " +
+                "TRUNCATE TABLE user_settings; " +
+                "TRUNCATE TABLE version; " +
+                "TRUNCATE TABLE video_conversion; " +
+                "SET FOREIGN_KEY_CHECKS=1; ";
+        boolean result = newconn.createStatement().execute(query);
+        System.out.println("Truncated all tables");
         return result;
     }
 }
