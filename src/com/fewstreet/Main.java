@@ -4,11 +4,15 @@ import java.sql.*;
 
 
 public class Main {
+    private static String OLD_DB_URI = "jdbc:hsqldb:file:C:\\Users\\Peter\\Downloads\\db\\subsonic";
+    private static String NEW_DB_URI = "jdbc:mysql://192.168.1.221/subsonic_migrate";
+    private static String NEW_DB_USER = "subsonic";
+    private static String NEW_DB_PASS = "xjXtvllUcRN664pP";
 
     public static void main(String[] args) {
         try {
-            Connection old_db_connection = DriverManager.getConnection("jdbc:hsqldb:file:C:\\Users\\Peter\\Downloads\\db\\subsonic", "SA", "");
-            Connection new_db_connection = DriverManager.getConnection("jdbc:mysql://192.168.1.221/subsonic_migrate?useJDBCCompliantTimezoneShift=true&serverTimezone=UTC&useSSL=false&allowMultiQueries=true", "subsonic", "xjXtvllUcRN664pP");
+            Connection old_db_connection = DriverManager.getConnection(OLD_DB_URI, "SA", "");
+            Connection new_db_connection = DriverManager.getConnection(NEW_DB_URI+"?useJDBCCompliantTimezoneShift=true&serverTimezone=UTC&useSSL=false&allowMultiQueries=true", NEW_DB_USER, NEW_DB_PASS);
             new_db_connection.setAutoCommit(false);
 
             truncateDatShit(new_db_connection);
@@ -19,6 +23,7 @@ public class Main {
             try { migrateUsers(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Users Failed: " + e);}
             try { migrateUserRole(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("User roles Failed: " + e);}
             try { migrateMediaFiles(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Media files Failed: " + e);}
+            try { migrateGenres(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Genres Failed: " + e);}
             try { migrateAlbums(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Albums Failed: " + e);}
             try { migrateArtists(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Artists roles Failed: " + e);}
             try { migrateMusicFolders(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Music Folders Failed: " + e);}
@@ -27,6 +32,7 @@ public class Main {
             try { migrateStarredAlbum(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Starred album Failed: " + e);}
             try { migrateStarredArtist(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Starred artist Failed: " + e);}
             try { migrateUserRating(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("User rating Failed: " + e);}
+            try { migrateTranscoding(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Transcodings Failed: " + e);}
 
             new_db_connection.commit();
             new_db_connection.close();
@@ -130,6 +136,18 @@ public class Main {
         System.out.println("Inserted all artists");
     }
 
+    private static void migrateGenres(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        String TABLE_NAME = "GENRE";
+        String columns = "name, song_count, album_count";
+
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
+        while(r.next()){
+            insert(new_db_conn, "insert into "+TABLE_NAME+" ( "+columns+" ) values ("+questionMarks(columns)+")",
+                    r.getString(1), r.getInt(2), r.getInt(3));
+        }
+        System.out.println("Inserted all genres");
+    }
+
     private static void migrateMediaFiles(Connection old_db_conn, Connection new_db_conn) throws SQLException {
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+MediaFile.INSERT_COLUMNS+" from MEDIA_FILE ORDER BY id ASC");
         while(r.next()){
@@ -191,6 +209,19 @@ public class Main {
                     r.getString(1), r.getString(2), r.getInt(3));
         }
         System.out.println("Inserted all user ratings");
+    }
+
+    private static void migrateTranscoding(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        String TABLE_NAME = "TRANSCODING2";
+        String columns = "id, name, source_formats, target_format, step1, step2, step3, default_active";
+
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
+        while(r.next()){
+            insert(new_db_conn, "insert into "+TABLE_NAME+" ( "+columns+" ) values ("+questionMarks(columns)+")",
+                    r.getInt(1), r.getString(2), r.getString(3), r.getString(4),
+                    r.getString(5), r.getString(6), r.getString(7), r.getInt(8));
+        }
+        System.out.println("Inserted all transcodings");
     }
 
     private static String questionMarks(String columns) {
