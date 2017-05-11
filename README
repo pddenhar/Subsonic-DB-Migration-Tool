@@ -1,1 +1,3 @@
 Java tool to migrate a subsonic database (currently 6.1b1) from HSQLDB to MySQL.
+
+THERE IS NO GUARANTEE THAT THIS TOOL WILL WORK WITH ANY OTHER VERSION / NOT DESTROY YOUR DATABASE.
