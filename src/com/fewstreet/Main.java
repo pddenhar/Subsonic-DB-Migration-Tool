@@ -11,11 +11,15 @@ public class Main {
             Connection mysqlc = DriverManager.getConnection("jdbc:mysql://192.168.1.221/subsonic_migrate?useJDBCCompliantTimezoneShift=true&serverTimezone=UTC&useSSL=false", "subsonic", "xjXtvllUcRN664pP");
             mysqlc.setAutoCommit(false);
 
-            migrateMediaFiles(hsqldbc, mysqlc);
-            migrateAlbums(hsqldbc, mysqlc);
-            migrateArtists(hsqldbc, mysqlc);
-            migrateMusicFolders(hsqldbc, mysqlc);
-            migrateMusicFolderUsers(hsqldbc, mysqlc);
+            try { migrateVersion(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Versions Failed");}
+            try { migrateRoles(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Roles Failed");}
+            try { migrateUsers(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Users Failed");}
+            try { migrateUserRole(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("User roles Failed");}
+            try { migrateMediaFiles(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Media files Failed");}
+            try { migrateAlbums(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Albums Failed");}
+            try { migrateArtists(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Artists roles Failed");}
+            try { migrateMusicFolders(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Music Folders Failed");}
+            try { migrateMusicFolderUsers(hsqldbc, mysqlc); } catch (SQLException e) {System.out.println("Music Folder Users Failed");}
 
             mysqlc.commit();
             mysqlc.close();
@@ -25,12 +29,51 @@ public class Main {
         }
     }
 
+    private static void migrateVersion(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT version from VERSION");
+        while(r.next()){
+            insert(new_db_conn, "insert into VERSION ( version ) values (?)",
+                    r.getInt(1));
+        }
+        System.out.println("Inserted all versions");
+    }
+
+    private static void migrateRoles(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT id, name from ROLE");
+        while(r.next()){
+            insert(new_db_conn, "insert into ROLE ( id, name ) values (?,?)",
+                    r.getInt(1), r.getString(2));
+        }
+        System.out.println("Inserted all roles");
+    }
+
+
+    private static void migrateUsers(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+User.COLUMNS +" from USER");
+        while(r.next()){
+            User user = User.mapRow(r);
+            insert(new_db_conn, "insert into USER (" + User.COLUMNS + ") values (" + questionMarks(User.COLUMNS) + ")",
+                    user.getUsername(), user.getPassword(), user.getEmail(), user.isLdapAuthenticated(),
+                    user.getBytesStreamed(), user.getBytesDownloaded(), user.getBytesUploaded());
+        }
+        System.out.println("Inserted all users");
+    }
+
+    private static void migrateUserRole(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT username, role_id from USER_ROLE");
+        while(r.next()){
+            insert(new_db_conn, "insert into USER_ROLE ( username, role_id ) values (?,?)",
+                    r.getString(1), r.getInt(2));
+        }
+        System.out.println("Inserted all user roles");
+    }
+
     private static void migrateMusicFolders(Connection old_db_conn, Connection new_db_conn) throws SQLException {
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+MusicFolder.COLUMNS +" from MUSIC_FOLDER");
         while(r.next()){
             MusicFolder musicFolder = MusicFolder.mapRow(r);
             insert(new_db_conn, "insert into MUSIC_FOLDER (" + MusicFolder.COLUMNS + ") values (" + questionMarks(MusicFolder.COLUMNS) + ")",
-                    musicFolder.getId(), musicFolder.getPath().getPath(), musicFolder.getName(), musicFolder.isEnabled(), musicFolder.getChanged());
+                    musicFolder.getId(), musicFolder.getPath(), musicFolder.getName(), musicFolder.isEnabled(), musicFolder.getChanged());
         }
         System.out.println("Inserted all music folders");
     }

@@ -13,7 +13,7 @@ public class MusicFolder {
 
 
     private Integer id;
-    private File path;
+    private String path;
     private String name;
     private boolean isEnabled;
     private Date changed;
@@ -27,7 +27,7 @@ public class MusicFolder {
      * @param enabled Whether the folder is enabled.
      * @param changed When the corresponding database entry was last changed.
      */
-    public MusicFolder(Integer id, File path, String name, boolean enabled, Date changed) {
+    public MusicFolder(Integer id, String path, String name, boolean enabled, Date changed) {
         this.id = id;
         this.path = path;
         this.name = name;
@@ -43,7 +43,7 @@ public class MusicFolder {
      * @param enabled Whether the folder is enabled.
      * @param changed When the corresponding database entry was last changed.
      */
-    public MusicFolder(File path, String name, boolean enabled, Date changed) {
+    public MusicFolder(String path, String name, boolean enabled, Date changed) {
         this(null, path, name, enabled, changed);
     }
 
@@ -61,7 +61,7 @@ public class MusicFolder {
      *
      * @return The path of the music folder.
      */
-    public File getPath() {
+    public String getPath() {
         return path;
     }
 
@@ -70,7 +70,7 @@ public class MusicFolder {
      *
      * @param path The path of the music folder.
      */
-    public void setPath(File path) {
+    public void setPath(String path) {
         this.path = path;
     }
 
@@ -129,6 +129,6 @@ public class MusicFolder {
     }
 
     public static MusicFolder mapRow(ResultSet rs) throws SQLException {
-        return new MusicFolder(rs.getInt(1), new File(rs.getString(2)), rs.getString(3), rs.getBoolean(4), rs.getTimestamp(5));
+        return new MusicFolder(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getBoolean(4), rs.getTimestamp(5));
     }
 }

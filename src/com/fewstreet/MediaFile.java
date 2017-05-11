@@ -2,7 +2,6 @@ package com.fewstreet;
 
 
 
-import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
@@ -114,11 +113,6 @@ public class MediaFile {
 
     public void setFolder(String folder) {
         this.folder = folder;
-    }
-
-    public File getFile() {
-        // TODO: Optimize
-        return new File(path);
     }
 
     public MediaType getMediaType() {
@@ -325,9 +319,6 @@ public class MediaFile {
         this.parentPath = parentPath;
     }
 
-    public File getParentFile() {
-        return getFile().getParentFile();
-    }
 
     public int getPlayCount() {
         return playCount;
@@ -418,10 +409,6 @@ public class MediaFile {
         return path.hashCode();
     }
 
-    public File getCoverArtFile() {
-        // TODO: Optimize
-        return coverArtPath == null ? null : new File(coverArtPath);
-    }
 
     @Override
     public String toString() {
