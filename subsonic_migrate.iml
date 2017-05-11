@@ -9,5 +9,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="org.hsqldb:hsqldb:2.3.4" level="project" />
     <orderEntry type="library" name="mysql:mysql-connector-java:6.0.6" level="project" />
+    <orderEntry type="library" name="commons-io:commons-io:2.5" level="project" />
   </component>
 </module>
