@@ -19,9 +19,12 @@ public class Main {
 
             try { migrateVersion(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Versions Failed: " + e);}
             try { migrateTableID(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Table IDs Failed: " + e);}
+            try { migrateSystemAvatars(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("System avatars failed: " + e);}
             try { migrateRoles(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Roles Failed: " + e);}
             try { migrateUsers(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Users Failed: " + e);}
             try { migrateUserRole(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("User roles Failed: " + e);}
+            try { migrateUserSettings(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("User settings Failed: " + e);}
+            try { migrateCustomAvatars(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("System avatars failed: " + e);}
             try { migrateMediaFiles(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Media files Failed: " + e);}
             try { migrateGenres(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Genres Failed: " + e);}
             try { migrateAlbums(old_db_connection, new_db_connection); } catch (SQLException e) {System.out.println("Albums Failed: " + e);}
@@ -79,6 +82,68 @@ public class Main {
             insert(new_db_conn, "insert into USER (" + User.COLUMNS + ") values (" + questionMarks(User.COLUMNS) + ")",
                     user.getUsername(), user.getPassword(), user.getEmail(), user.isLdapAuthenticated(),
                     user.getBytesStreamed(), user.getBytesDownloaded(), user.getBytesUploaded());
+        }
+        System.out.println("Inserted all users");
+    }
+
+    private static void migrateSystemAvatars(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        String TABLE_NAME = "SYSTEM_AVATAR";
+        String columns = "id, name, created_date, mime_type, width, height, data";
+
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
+        while(r.next()){
+            insert(new_db_conn, "insert into "+TABLE_NAME+" ( "+columns+" ) values ("+questionMarks(columns)+")",
+                    r.getInt(1), r.getString(2), r.getTimestamp(3), r.getString(4),
+                    r.getInt(5), r.getInt(6), r.getBlob(7));
+        }
+        System.out.println("Inserted all system avatars");
+    }
+
+    private static void migrateCustomAvatars(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        String TABLE_NAME = "CUSTOM_AVATAR";
+        String columns = "id, name, created_date, mime_type, width, height, data, username";
+
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
+        while(r.next()){
+            insert(new_db_conn, "insert into "+TABLE_NAME+" ( "+columns+" ) values ("+questionMarks(columns)+")",
+                    r.getInt(1), r.getString(2), r.getTimestamp(3), r.getString(4),
+                    r.getInt(5), r.getInt(6), r.getBlob(7), r.getString(8));
+        }
+        System.out.println("Inserted all custom avatars");
+    }
+
+
+    private static void migrateUserSettings(Connection old_db_conn, Connection new_db_conn) throws SQLException {
+        String TABLE_NAME = "USER_SETTINGS";
+        String COLUMNS = "username, locale, theme_id, final_version_notification, beta_version_notification, "+
+                "main_caption_cutoff, main_track_number, main_artist, main_album, main_genre, main_year, "+
+                "main_bit_rate, main_duration, main_format, main_file_size, playlist_caption_cutoff, "+
+                "playlist_track_number, playlist_artist, playlist_album, playlist_genre, playlist_year, " +
+                "playlist_bit_rate, playlist_duration, playlist_format, playlist_file_size, last_fm_enabled, " +
+                "last_fm_username, last_fm_password, transcode_scheme, show_now_playing, selected_music_folder_id, " +
+                "party_mode_enabled, now_playing_allowed, web_player_default, avatar_scheme, system_avatar_id, " +
+                "changed, show_chat, song_notification, show_artist_info, auto_hide_play_queue, view_as_list, " +
+                "default_album_list, queue_following_songs, show_side_bar, " +
+                "show_index_in_side_bar, preferred_video_bitrate";
+        ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+COLUMNS +" from "+TABLE_NAME);
+        while(r.next()){
+            insert(new_db_conn, "insert into " + TABLE_NAME + " (" + COLUMNS + ") values (" + questionMarks(COLUMNS) + ")",
+                    r.getString(1), r.getString(2), r.getString(3),
+                    r.getInt(4), r.getInt(5), r.getInt(6),
+                    r.getInt(7), r.getInt(8), r.getInt(9),
+                    r.getInt(10), r.getInt(11), r.getInt(12),
+                    r.getInt(13), r.getInt(14), r.getInt(15),
+                    r.getInt(16), r.getInt(17), r.getInt(18),
+                    r.getInt(19), r.getInt(20), r.getInt(21),
+                    r.getInt(22), r.getInt(23), r.getInt(24),
+                    r.getInt(25), r.getInt(26), r.getString(27),
+                    r.getString(28), r.getString(29), r.getInt(30),
+                    r.getInt(31), r.getInt(32), r.getInt(33),
+                    r.getInt(34), r.getString(35), r.getInt(36),
+                    r.getTimestamp(37), r.getInt(38), r.getInt(39),
+                    r.getInt(40), r.getInt(41), r.getInt(42),
+                    r.getString(43), r.getInt(44), r.getInt(45),
+                    r.getInt(46), r.getInt(47));
         }
         System.out.println("Inserted all users");
     }
