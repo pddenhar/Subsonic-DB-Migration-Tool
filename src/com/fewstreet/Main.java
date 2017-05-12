@@ -5,7 +5,7 @@ import java.sql.*;
 
 public class Main {
     private static String OLD_DB_URI = "jdbc:hsqldb:file:C:\\Users\\Peter\\Downloads\\db\\subsonic";
-    private static String NEW_DB_URI = "jdbc:mysql://192.168.1.221/subsonic_migrate";
+    private static String NEW_DB_URI = "jdbc:mysql://192.168.1.221/subsonic";
     private static String NEW_DB_USER = "subsonic";
     private static String NEW_DB_PASS = "xjXtvllUcRN664pP";
 
