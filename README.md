@@ -20,13 +20,19 @@ THERE IS NO GUARANTEE THAT THIS TOOL WILL WORK WITH ANY OTHER VERSION / WILL NOT
 Usage
 -----
 
-The absolute first step is to set Subsonic up to connect to the new database and run it at least once, to
-build the table structure. 
+1. Make sure your new database server is up and running
+2. Follow the instructions on http://www.subsonic.org/pages/database.jsp to connect your existing 
+Subsonic installation to the empty database. 
+3. Run Subsonic at least once to initialize the new database with empty tables.
+4. Open the project in IntelliJ, open Main.java and change the `OLD_DB_URI`, `NEW_DB_URI`
+   and the two passwords.
+   * OLD_DB_URI should point to your existing HSQLDB database (/var/subsonic/db/subsonic on Linux).
+5. Run the project in IntelliJ and the data will be migrated from your old database to the new one,
+leaving your old database unchanged.
 
 **THIS TOOL DOES NOT CREATE DATABASES OR TABLES.** It only copies data from the old HSQLDB (or any other JDBC subsonic database) 
 to an empty new one (testing with MySQL). It merely populates the empty tables in the new database.
 
-The easiest way to run this tool is to open the project in IntelliJ, open Main.java and change the `OLD_DB_URI`, `NEW_DB_URI`
-and the two passwords and run it. OLD_DB_URI should point to your existing HSQLDB database (/var/subsonic/db/subsonic on Linux). 
 Make sure your mysql server is accessible to the machine you run this tool from
 (either by running this tool on your Subsonic server localhost or setting your MySQL bind port to 0.0.0.0 instead of 127.0.0.1)
+
