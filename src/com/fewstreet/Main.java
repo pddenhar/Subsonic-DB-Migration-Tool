@@ -46,7 +46,7 @@ public class Main {
     }
 
     private static void migrateVersion(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "VERSION";
+        String TABLE_NAME = "version";
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT version from "+TABLE_NAME);
         while(r.next()){
             insert(new_db_conn, "insert into "+TABLE_NAME+" ( version ) values (?)",
@@ -56,7 +56,7 @@ public class Main {
     }
 
     private static void migrateTableID(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "TABLE_ID";
+        String TABLE_NAME = "table_id";
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT table_name,max_id from "+TABLE_NAME);
         while(r.next()){
             insert(new_db_conn, "insert into "+TABLE_NAME+" ( table_name,max_id ) values (?,?)",
@@ -68,7 +68,7 @@ public class Main {
     private static void migrateRoles(Connection old_db_conn, Connection new_db_conn) throws SQLException {
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT id, name from ROLE");
         while(r.next()){
-            insert(new_db_conn, "insert into ROLE ( id, name ) values (?,?)",
+            insert(new_db_conn, "insert into role ( id, name ) values (?,?)",
                     r.getInt(1), r.getString(2));
         }
         System.out.println("Inserted all roles");
@@ -79,7 +79,7 @@ public class Main {
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+User.COLUMNS +" from USER");
         while(r.next()){
             User user = User.mapRow(r);
-            insert(new_db_conn, "insert into USER (" + User.COLUMNS + ") values (" + questionMarks(User.COLUMNS) + ")",
+            insert(new_db_conn, "insert into user (" + User.COLUMNS + ") values (" + questionMarks(User.COLUMNS) + ")",
                     user.getUsername(), user.getPassword(), user.getEmail(), user.isLdapAuthenticated(),
                     user.getBytesStreamed(), user.getBytesDownloaded(), user.getBytesUploaded());
         }
@@ -87,7 +87,7 @@ public class Main {
     }
 
     private static void migrateSystemAvatars(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "SYSTEM_AVATAR";
+        String TABLE_NAME = "system_avatar";
         String columns = "id, name, created_date, mime_type, width, height, data";
 
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
@@ -100,7 +100,7 @@ public class Main {
     }
 
     private static void migrateCustomAvatars(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "CUSTOM_AVATAR";
+        String TABLE_NAME = "custom_avatar";
         String columns = "id, name, created_date, mime_type, width, height, data, username";
 
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
@@ -114,7 +114,7 @@ public class Main {
 
 
     private static void migrateUserSettings(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "USER_SETTINGS";
+        String TABLE_NAME = "user_settings";
         String COLUMNS = "username, locale, theme_id, final_version_notification, beta_version_notification, "+
                 "main_caption_cutoff, main_track_number, main_artist, main_album, main_genre, main_year, "+
                 "main_bit_rate, main_duration, main_format, main_file_size, playlist_caption_cutoff, "+
@@ -151,7 +151,7 @@ public class Main {
     private static void migrateUserRole(Connection old_db_conn, Connection new_db_conn) throws SQLException {
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT username, role_id from USER_ROLE");
         while(r.next()){
-            insert(new_db_conn, "insert into USER_ROLE ( username, role_id ) values (?,?)",
+            insert(new_db_conn, "insert into user_role ( username, role_id ) values (?,?)",
                     r.getString(1), r.getInt(2));
         }
         System.out.println("Inserted all user roles");
@@ -161,7 +161,7 @@ public class Main {
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+MusicFolder.COLUMNS +" from MUSIC_FOLDER");
         while(r.next()){
             MusicFolder musicFolder = MusicFolder.mapRow(r);
-            insert(new_db_conn, "insert into MUSIC_FOLDER (" + MusicFolder.COLUMNS + ") values (" + questionMarks(MusicFolder.COLUMNS) + ")",
+            insert(new_db_conn, "insert into music_folder (" + MusicFolder.COLUMNS + ") values (" + questionMarks(MusicFolder.COLUMNS) + ")",
                     musicFolder.getId(), musicFolder.getPath(), musicFolder.getName(), musicFolder.isEnabled(), musicFolder.getChanged());
         }
         System.out.println("Inserted all music folders");
@@ -170,7 +170,7 @@ public class Main {
     private static void migrateMusicFolderUsers(Connection old_db_conn, Connection new_db_conn) throws SQLException {
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT music_folder_id, username from MUSIC_FOLDER_USER");
         while(r.next()){
-            insert(new_db_conn, "insert into MUSIC_FOLDER_USER ( music_folder_id, username ) values (?,?)",
+            insert(new_db_conn, "insert into music_folder_user ( music_folder_id, username ) values (?,?)",
                     r.getInt(1), r.getString(2));
         }
         System.out.println("Inserted all music folder users");
@@ -181,7 +181,7 @@ public class Main {
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+Album.COLUMNS +" from ALBUM ORDER BY id ASC");
         while(r.next()){
             Album album = Album.mapRow(r);
-            insert(new_db_conn, "insert into ALBUM (" + Album.COLUMNS + ") values (" + questionMarks(Album.COLUMNS) + ")",
+            insert(new_db_conn, "insert into album (" + Album.COLUMNS + ") values (" + questionMarks(Album.COLUMNS) + ")",
                     album.getId(), album.getPath(),
                     album.getName(), album.getArtist(), album.getSongCount(), album.getDurationSeconds(),
                     album.getCoverArtPath(), album.getYear(), album.getGenre(), album.getPlayCount(), album.getLastPlayed(),
@@ -194,7 +194,7 @@ public class Main {
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+Artist.COLUMNS +" from ARTIST ORDER BY id ASC");
         while(r.next()){
             Artist artist = Artist.mapRow(r);
-            insert(new_db_conn, "insert into ARTIST (" + Artist.COLUMNS + ") values (" + questionMarks(Artist.COLUMNS) + ")",
+            insert(new_db_conn, "insert into artist (" + Artist.COLUMNS + ") values (" + questionMarks(Artist.COLUMNS) + ")",
                     artist.getId(), artist.getName(), artist.getCoverArtPath(), artist.getAlbumCount(),
                     artist.getLastScanned(), artist.isPresent(), artist.getFolderId());
         }
@@ -202,7 +202,7 @@ public class Main {
     }
 
     private static void migrateGenres(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "GENRE";
+        String TABLE_NAME = "genre";
         String columns = "name, song_count, album_count";
 
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
@@ -229,7 +229,7 @@ public class Main {
     }
 
     private static void migrateStarredMediaFile(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "STARRED_MEDIA_FILE";
+        String TABLE_NAME = "starred_media_file";
         String columns = "id, media_file_id, username, created";
 
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
@@ -241,7 +241,7 @@ public class Main {
     }
 
     private static void migrateStarredAlbum(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "STARRED_ALBUM";
+        String TABLE_NAME = "starred_album";
         String columns = "id, album_id, username, created";
 
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
@@ -253,7 +253,7 @@ public class Main {
     }
 
     private static void migrateStarredArtist(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "STARRED_ARTIST";
+        String TABLE_NAME = "starred_artist";
         String columns = "id, artist_id, username, created";
 
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
@@ -265,7 +265,7 @@ public class Main {
     }
 
     private static void migrateUserRating(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "USER_RATING";
+        String TABLE_NAME = "user_rating";
         String columns = "username, path, rating";
 
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
@@ -277,7 +277,7 @@ public class Main {
     }
 
     private static void migrateTranscoding(Connection old_db_conn, Connection new_db_conn) throws SQLException {
-        String TABLE_NAME = "TRANSCODING2";
+        String TABLE_NAME = "transcoding2";
         String columns = "id, name, source_formats, target_format, step1, step2, step3, default_active";
 
         ResultSet r = old_db_conn.createStatement().executeQuery("SELECT "+columns+" from "+TABLE_NAME);
